@@ -1,0 +1,5 @@
+Flask==1.1.1
+jira==2.0.0
+jsonpickle==1.2
+google-cloud-logging>=1.14.0
+google-cloud-error_reporting==0.33.0
