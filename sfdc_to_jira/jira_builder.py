@@ -6,27 +6,18 @@ from sfdc_to_jira.pod_sunset import build_jira_tree_sunset_pod as sunset
 valid_types = ['create', 'relocate', 'topology', 'sunset']
 
 
-class SFDC_Data:
-    def __init__(self, inbound_json):
-        self.type = inbound_json['type']
-        self.account = inbound_json['account']
-        self.pod_list = [pod for pod in inbound_json['pod_list']]
-        self.profile = inbound_json['client_profile']
-        self.change_request = inbound_json['pod_change_request']
-
-
 def create_jira_tree(inbound_json):
     if 'type' in inbound_json and inbound_json['type'] in valid_types:
-        data = SFDC_Data(inbound_json)
+        request_type = inbound_json['type']
 
-        if data.type == 'create':
-            create(data)
-        elif data.type == 'relocate':
-            relocate(data)
-        elif data.type == 'topology':
-            topology(data)
-        elif data.type == 'sunset':
-            sunset(data)
+        if request_type == 'create':
+            create(inbound_json)
+        elif request_type == 'relocate':
+            relocate(inbound_json)
+        elif request_type == 'topology':
+            topology(inbound_json)
+        elif request_type == 'sunset':
+            sunset(inbound_json)
 
     else:
         return False, {"message": "Missing or invalid request type"}
