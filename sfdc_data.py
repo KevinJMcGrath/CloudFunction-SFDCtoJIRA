@@ -1,11 +1,49 @@
+class Person:
+    def __init__(self, person_record):
+        self.sfdc_id = person_record['Id']
+        self.fullname = person_record['Name']
+        self.email = person_record['Email']
 
-class POD2JIRA:
+
+class SFDC_User(Person):
+    def __init__(self, user_record):
+        super().__init__(user_record)
+
+        self.jira_username = user_record.get('JIRA_Username__c')
+
+    @staticmethod
+    def new_sfdc_user(user_json):
+        if user_json:
+            return SFDC_User(user_json)
+
+        return None
+
+
+class SFDC_SupportContact(Person):
+    def __init__(self, support_contact):
+        super().__init__(support_contact)
+
+        self.contact_title = support_contact.get('Role')
+
+
+class POD_ChangeRequest:
     def __init__(self, inbound_json, pod_data):
         self.type = inbound_json['type']
-        self.account = inbound_json['account']
         self.pod_data = pod_data
+
+        self.account = inbound_json['account']
+        self.users: dict = inbound_json['users'] # Include map of owners/SAs/requester/etc.
         self.profile = inbound_json['client_profile']
-        self.change_request = inbound_json['pod_change_request']
+        self.change_request = inbound_json.get('pod_change_request')
+
+        self.account_name = self.account['Name']
+        self.account_owner = SFDC_User.new_sfdc_user(self.users.get('account_owner'))
+        self.cr_requesting_user = SFDC_User.new_sfdc_user(self.users.get('cr_requester'))
+        self.primary_sa = SFDC_User.new_sfdc_user(self.users.get('primary_sa'))
+        self.secondary_sa = SFDC_User.new_sfdc_user(self.users.get('secondary_sa'))
+        self.tam = SFDC_User.new_sfdc_user(self.users.get('tam'))
+
+        self.support_contacts = load_support_contacts(inbound_json.get('support_contacts'))
 
         self.pod_type = ''
         self.whitelist_ip = ''
@@ -15,9 +53,10 @@ class POD2JIRA:
         self.seat_count = 0
         self.directory_name = ''
         self.product_type = ''
-        self.subdomain = ''
+        self.client_url = ''
         self.pod_create_datacenter = ''
         self.pod_create_topology = ''
+        self.on_prem_deployment_flag = False
 
         self.parse_data()
 
@@ -41,31 +80,32 @@ class POD2JIRA:
             self.pod_create_datacenter = 'Not Specified'
 
         # POD Architecture
-        self.subdomain = self.pod_data.get('Base_URL__c', self.profile.get('Subdomain__c'))
-        if self.subdomain:
+        self.client_url = self.pod_data.get('Base_URL__c', self.profile.get('Subdomain__c'))
+        if self.client_url:
             if self.pod_type == 'Production':
-                self.subdomain += '.symphony.com'
+                self.client_url += '.symphony.com'
             else:
-                self.subdomain += '-test.symphony.com'
+                self.client_url += '-test.symphony.com'
         else:
-            self.subdomain = 'TBD'
+            self.client_url = 'TBD'
 
-    def get_summary(self):
-        pass
+        self.on_prem_deployment_flag = self.pod_data.get('Opp_On_Prem_Deployment__c')
 
-    def get_description(self):
-        pass
-
-    def get_service_catalog(self):
-        pass
-
-    def get_reporter(self):
-        return {"name", "kevin.mcgrath"}
-
-    def get_priority(self):
-        return {"name", "Major"}
-
-    def get_sre_service_catalog(self):
-        pass
+    def get_reporter_username(self):
+        if self.cr_requesting_user:
+            return self.cr_requesting_user
+        elif self.primary_sa:
+            return self.primary_sa
+        elif self.secondary_sa:
+            return self.secondary_sa
+        elif self.tam:
+            return self.tam
+        else:
+            return 'kevin.mcgrath'
 
 
+def load_support_contacts(support_contacts_json):
+    if not support_contacts_json:
+        return None
+
+    return [SFDC_SupportContact(contact) for contact in support_contacts_json]

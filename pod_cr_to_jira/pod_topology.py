@@ -1,7 +1,7 @@
 import sfdc_data
 
 
-class Topology2JIRA(sfdc_data.POD2JIRA):
+class Topology2JIRA(sfdc_data.POD_ChangeRequest):
     def __init__(self, inbound_json, pod_data):
         super().__init__(inbound_json, pod_data)
 

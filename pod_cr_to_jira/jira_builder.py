@@ -1,7 +1,7 @@
-from sfdc_to_jira.pod_create import build_jira_tree_new_pod as create
-from sfdc_to_jira.pod_relocate import build_jira_tree_relocate_pod as relocate
-from sfdc_to_jira.pod_topology import build_jira_tree_topology_upgrade as topology
-from sfdc_to_jira.pod_sunset import build_jira_tree_sunset_pod as sunset
+from pod_cr_to_jira.pod_create import build_jira_tree_new_pod as create
+from pod_cr_to_jira.pod_relocate import build_jira_tree_relocate_pod as relocate
+from pod_cr_to_jira.pod_topology import build_jira_tree_topology_upgrade as topology
+from pod_cr_to_jira.pod_sunset import build_jira_tree_sunset_pod as sunset
 
 valid_types = ['create', 'relocate', 'topology', 'sunset']
 

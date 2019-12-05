@@ -1,4 +1,4 @@
-from sfdc_to_jira import jira_builder
+from pod_cr_to_jira import jira_builder
 
 from flask import escape, abort
 from google.cloud import error_reporting
@@ -21,8 +21,6 @@ def inbound_http(request):
         except Exception as ex:
             # google_error_client.report_exception()
             abort(500, str(ex))
-
-
 
     else:
         abort(400, 'Payload missing or invalid.')
